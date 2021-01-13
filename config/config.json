@@ -1,0 +1,4 @@
+{
+  "userinfo_endpoint": "https://example.com/userinfo",
+  "login_aud": "YOUR_ID"
+}
