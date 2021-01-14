@@ -191,6 +191,12 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc, cons
         closelog();
         return PAM_SYSTEM_ERR;
     }
+    if (!validate_userinfo_response(response, pUsername, config))
+    {
+        syslog(LOG_ERR, "UserInfo response validation failed");
+        closelog();
+        return PAM_SYSTEM_ERR;
+    }
     char *envvar;
     asprintf(&envvar, "%s=%s", "SDS_ACCESS_TOKEN", pToken);
     retval = pam_putenv(pamh, envvar);
