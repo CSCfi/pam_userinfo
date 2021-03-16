@@ -36,6 +36,11 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
+    
+    - name: Install libcurl-devel
+      run: |
+        sudo apt update
+        sudo apt-get install libcurl4-openssl-dev
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
