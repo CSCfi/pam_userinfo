@@ -37,10 +37,10 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
     
-    - name: Install libcurl-devel
+    - name: Install dependencies
       run: |
         sudo apt update
-        sudo apt-get install libcurl4-openssl-dev
+        sudo apt-get install libcurl4-openssl-dev libpam0g-dev
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
