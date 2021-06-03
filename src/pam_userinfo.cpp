@@ -1,7 +1,10 @@
-#include <sys/param.h>
+#include "include/config.hpp"
+#include "include/nlohmann/json.hpp"
+
 #include <curl/curl.h>
 #include <security/pam_appl.h>
 #include <security/pam_modules.h>
+#include <sys/param.h>
 
 #ifdef BSD
 #include <security/pam_appl.h>
@@ -9,21 +12,78 @@
 #include <security/pam_ext.h>
 #endif
 
-#include <syslog.h>
 #include <chrono>
+#include <fstream>
+#include <iostream>
 #include <sstream>
+#include <string>
+#include <syslog.h>
 #include <thread>
-#include "include/config.hpp"
-#include "include/nlohmann/json.hpp"
+#include <vector>
 
 using json = nlohmann::json;
 
 // TODO: set method docs
+// TODO: see that exceptions are always handled
 
 static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
 {
     ((std::string *)userp)->append((char *)contents, size * nmemb);
     return size * nmemb;
+}
+
+void appendFile(std::string newLine, std::string fileName)
+{
+    std::ofstream ofstrAppend;
+    ofstrAppend.open(fileName.c_str(), std::ios::app);
+    if (!ofstrAppend)
+    {
+        syslog(LOG_WARNING, "Not able to open file %s for appending. May result as PAM stack failure at later point", fileName.c_str());
+        return;
+    }
+    syslog(LOG_INFO, "Appending %s to file %s", newLine.c_str(), fileName.c_str());
+    ofstrAppend << newLine.c_str() << std::endl;
+    ofstrAppend.close();
+}
+
+void addUser(const char *pUsername)
+{
+    std::string strUser(pUsername);
+    std::fstream fstrPasswd;
+    fstrPasswd.open("/etc/passwd", std::ios::in);
+    if (!fstrPasswd)
+    {
+        syslog(LOG_WARNING, "Not able to open file /etc/passwd for reading. May result as PAM stack failure at later point");
+        return;
+    }
+    std::string contents((std::istreambuf_iterator<char>(fstrPasswd)), std::istreambuf_iterator<char>());
+    fstrPasswd.close();
+    size_t last = 0;
+    size_t next = 0;
+    std::vector<std::string> vecFields;
+    while ((next = contents.find_first_of(":\n", last)) != std::string::npos)
+    {
+        vecFields.push_back(contents.substr(last, next - last));
+        last = next + 1;
+    }
+    vecFields.push_back(contents.substr(last, next - last));
+    if (find(vecFields.begin(), vecFields.end(), strUser) != vecFields.end())
+    {
+        //User is already in /etc/passwd, nothing to do
+        return;
+    }
+    // Generate uid between 1000-1999
+    int i = 1000 + rand() % 1000;
+    while (find(vecFields.begin(), vecFields.end(), std::to_string(i)) != vecFields.end())
+    {
+        //Userid may be taken already, generate a new one.
+        i = 1000 + rand() % 1000;
+    }
+    // We make bold assumption that if groupid is not in /etc/passwd it is not reserved yet
+    std::string strPasswdEntry = strUser + ":" + std::to_string(i) + ":" + std::to_string(i) + "::/home/" + strUser + ":/bin/bash";
+    appendFile(strPasswdEntry, "/etc/passwd");
+    std::string strGroupsEntry = strUser + ":x:" + std::to_string(i) + ":";
+    appendFile(strGroupsEntry, "/etc/group");
 }
 
 bool validate_userinfo_response(std::string response, const char *username, Config config)
@@ -208,6 +268,7 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc, cons
     }
     free(envvar);
     syslog(LOG_INFO, "Authentication succeeded");
+    addUser(pUsername);
     closelog();
     return PAM_SUCCESS;
 }
