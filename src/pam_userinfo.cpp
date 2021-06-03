@@ -80,7 +80,7 @@ void addUser(const char *pUsername)
         i = 1000 + rand() % 1000;
     }
     // We make bold assumption that if groupid is not in /etc/passwd it is not reserved yet
-    std::string strPasswdEntry = strUser + ":" + std::to_string(i) + ":" + std::to_string(i) + "::/home/" + strUser + ":/bin/bash";
+    std::string strPasswdEntry = strUser + ":x:" + std::to_string(i) + ":" + std::to_string(i) + "::/home/" + strUser + ":/bin/bash";
     appendFile(strPasswdEntry, "/etc/passwd");
     std::string strGroupsEntry = strUser + ":x:" + std::to_string(i) + ":";
     appendFile(strGroupsEntry, "/etc/group");
