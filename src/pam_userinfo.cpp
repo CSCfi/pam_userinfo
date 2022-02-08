@@ -46,6 +46,37 @@ void appendFile(std::string newLine, std::string fileName)
     ofstrAppend.close();
 }
 
+void addUserToGroup(std::string strUser, std::string strGroup)
+{
+    std::fstream fstrGroup;
+    fstrGroup.open("/etc/group", std::ios::in);
+    if (!fstrGroup)
+    {
+        syslog(LOG_WARNING, "Not able to open file /etc/group for reading. User is not added to users group");
+        return;
+    }
+    std::string contents((std::istreambuf_iterator<char>(fstrGroup)), std::istreambuf_iterator<char>());
+    fstrGroup.close();
+    size_t last = 0;
+    size_t next = 0;
+    std::vector<std::string> vecFields;
+    while ((next = contents.find_first_of("\n", last)) != std::string::npos)
+    {
+        std::string strLine = contents.substr(last, next - last);
+        vecFields.push_back((strLine.find(strGroup + ":x") != std::string::npos) ? (strLine.back() == ':' ? strLine + strUser : strLine + "," + strUser) : strLine);
+        last = next + 1;
+    }
+    std::ofstream fstrNewGroup("/etc/group");
+    if (!fstrNewGroup)
+    {
+        syslog(LOG_WARNING, "Not able to open file /etc/group for writing. User is not added to users group");
+        return;
+    }
+    for (const auto &e : vecFields)
+        fstrNewGroup << e << "\n";
+    fstrNewGroup.close();
+}
+
 void addUser(const char *pUsername)
 {
     std::string strUser(pUsername);
@@ -66,17 +97,16 @@ void addUser(const char *pUsername)
         vecFields.push_back(contents.substr(last, next - last));
         last = next + 1;
     }
-    vecFields.push_back(contents.substr(last, next - last));
     if (find(vecFields.begin(), vecFields.end(), strUser) != vecFields.end())
     {
-        //User is already in /etc/passwd, nothing to do
+        // User is already in /etc/passwd, nothing to do
         return;
     }
     // Generate uid between 1000-1999
     int i = 1000 + rand() % 1000;
     while (find(vecFields.begin(), vecFields.end(), std::to_string(i)) != vecFields.end())
     {
-        //Userid may be taken already, generate a new one.
+        // Userid may be taken already, generate a new one.
         i = 1000 + rand() % 1000;
     }
     // We make bold assumption that if groupid is not in /etc/passwd it is not reserved yet
@@ -84,6 +114,8 @@ void addUser(const char *pUsername)
     appendFile(strPasswdEntry, "/etc/passwd");
     std::string strGroupsEntry = strUser + ":x:" + std::to_string(i) + ":";
     appendFile(strGroupsEntry, "/etc/group");
+    // We add user always to users group
+    addUserToGroup(strUser, "users");
 }
 
 bool validate_userinfo_response(std::string response, const char *username, Config config)
@@ -112,7 +144,7 @@ bool validate_userinfo_response(std::string response, const char *username, Conf
         syslog(LOG_ERR, "UserInfo response does not contain sub claim");
         return false;
     }
-    //Verify there is a claim matching PAM login. PAM login must match sub unless there is alternative claim defined.
+    // Verify there is a claim matching PAM login. PAM login must match sub unless there is alternative claim defined.
     std::set<std::string>::iterator it = config.username_matches.begin();
     bool match = false;
     while (it != config.username_matches.end())
@@ -128,7 +160,7 @@ bool validate_userinfo_response(std::string response, const char *username, Conf
         }
         it++;
     }
-    //If specific claim set we verify PAM login equals sub claim value
+    // If specific claim set we verify PAM login equals sub claim value
     if (config.username_matches.size() == 0)
     {
         std::string sub = parsedResponse.at("sub");
@@ -142,7 +174,7 @@ bool validate_userinfo_response(std::string response, const char *username, Conf
         syslog(LOG_ERR, "Access token does not match the user %s", username);
         return false;
     }
-    //Now verify that there is a claim indicating access token is meant for login
+    // Now verify that there is a claim indicating access token is meant for login
     if (!parsedResponse.contains("login_aud"))
     {
         syslog(LOG_ERR, "UserInfo response does not contain login_aud claim");
