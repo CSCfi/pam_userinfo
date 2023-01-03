@@ -116,6 +116,11 @@ void addUser(const char *pUsername)
     appendFile(strGroupsEntry, "/etc/group");
     // We add user always to users group
     addUserToGroup(strUser, "users");
+
+    // podman specific subuid and subgid
+    std::string strSubEntry = strUser + ":" + std::to_string(i) + ":65536";
+    appendFile(strSubEntry, "/etc/subuid");
+    appendFile(strSubEntry, "/etc/subgid");
 }
 
 bool validate_userinfo_response(std::string response, const char *username, Config config)
