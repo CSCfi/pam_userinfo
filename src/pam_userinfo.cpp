@@ -118,7 +118,7 @@ void addUser(const char *pUsername)
     addUserToGroup(strUser, "users");
 
     // podman specific subuid and subgid
-    std::string strSubEntry = strUser + ":" + std::to_string(i) + ":65536";
+    std::string strSubEntry = strUser + ":10000:65536";
     appendFile(strSubEntry, "/etc/subuid");
     appendFile(strSubEntry, "/etc/subgid");
 }
