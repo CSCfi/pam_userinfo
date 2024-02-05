@@ -1,0 +1,14 @@
+stages:
+
+  - release
+
+include:
+  - project: 'sds-dev/releases'
+    ref: main
+    file: 'releases.yml'
+
+
+release:
+  extends: .automated-release
+  release:
+    description: "PAM Module - automated release"
