@@ -1,9 +1,12 @@
 # pam_userinfo
+
 PAM module treating the authentication token as OIDC Access Token to access https://openid.net/specs/openid-connect-core-1_0.html#UserInfo
 
-# Configuration
-## Example /etc/pam_userinfo/config.json
+## Configuration
 
+### Example /etc/pam_userinfo/config.json
+
+```json
     {
       "username_matches": [
         "YOUR_CLAIM"
@@ -11,9 +14,10 @@ PAM module treating the authentication token as OIDC Access Token to access http
       "login_aud": "YOUR_AUD_VALUE",
       "userinfo_endpoint": "https://example.com/userinfo"
     }
-    
-## PAM configuration example
+```
+### PAM configuration example
 
+```conf
     auth        required	  pam_env.so
     auth        required	  pam_faildelay.so delay=2000000
     auth        sufficient    pam_userinfo.so
@@ -31,3 +35,4 @@ PAM module treating the authentication token as OIDC Access Token to access http
     -session     optional	   pam_systemd.so
     session     [success=1 default=ignore] pam_succeed_if.so service in crond quiet use_uid
     session     required	  pam_unix.so
+```
