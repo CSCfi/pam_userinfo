@@ -11,4 +11,4 @@ include:
 release:
   extends: .automated-release
   release:
-    description: "PAM Module - automated release"
+    description: $(cat release_changes.md)
