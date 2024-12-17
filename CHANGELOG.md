@@ -7,6 +7,12 @@ and this project adheres to [Calendar Versioning](https://calver.org/).
 
 ## [Unreleased]
 
+## [2024.12.0] - 2024-12-17
+
+### Fixed
+
+- user id error with podman
+
 ## [2024.03.0] - 2024-03-22
 
 ### Added
@@ -65,7 +71,8 @@ and this project adheres to [Calendar Versioning](https://calver.org/).
 
 - Initial commit
 
-[unreleased]: https://gitlab.ci.csc.fi/sds-dev/sd-desktop/pam_userinfo/compare/2024.03.0...HEAD
+[Unreleased]: https://gitlab.ci.csc.fi/sds-dev/sd-desktop/pam_userinfo/compare/2024.12.0...HEAD
+[2024.12.0]: https://gitlab.ci.csc.fi/sds-dev/sd-desktop/pam_userinfo/compare/2024.03.0...2024.12.0
 [2024.03.0]: https://gitlab.ci.csc.fi/sds-dev/sd-desktop/pam_userinfo/compare/2024.02.0...2024.03.0
 [2024.02.0]: https://gitlab.ci.csc.fi/sds-dev/sd-desktop/pam_userinfo/compare/v0.9.4...2024.02.0
 [v0.9.4]: https://gitlab.ci.csc.fi/sds-dev/sd-desktop/pam_userinfo/compare/v0.9.4-alpha...v0.9.4
