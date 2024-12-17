@@ -25,6 +25,7 @@ PAM module treating the authentication token as OIDC Access Token to access http
     auth        required	  pam_deny.so
 
     account     required	  pam_userinfo.so
+    account     optional      pam_exec.so seteuid /root/adduser.sh
     account     sufficient    pam_localuser.so
     account     sufficient    pam_succeed_if.so uid < 1000 quiet
     account     required	  pam_permit.so
